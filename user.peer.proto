@@ -1,0 +1,64 @@
+syntax = "proto3";
+package pb;
+option go_package = "./peerpb";
+
+import "types.peer.proto";
+
+// **************************************************** 外部 ***************************************************** //
+
+// **************************************************** 外部: 回调 ***************************************************** //
+
+//UserAfterOnlineReq 用户上线回调请求
+message UserAfterOnlineReq {
+  RequestHeader header = 1;
+}
+
+//UserAfterOnlineResp 用户上线回调响应
+message UserAfterOnlineResp {
+  ResponseHeader header = 1;
+}
+
+//UserAfterOfflineReq 用户下线回调请求
+message UserAfterOfflineReq {
+  RequestHeader header = 1;
+  string userId = 2; // 用户id 唯一
+}
+
+//UserAfterOfflineResp 用户下线回调响应
+message UserAfterOfflineResp {
+  ResponseHeader header = 1;
+}
+
+//UserBeforeConnectReq 服务端连接前的回调
+message UserBeforeConnectReq {
+  RequestHeader header = 1;
+  string userId = 2; // 用户id 唯一
+  string token = 3; // 用户token
+}
+
+//UserBeforeConnectResp 服务端连接前的回调
+message UserBeforeConnectResp {
+  ResponseHeader header = 1;
+  // 是否允许建立连接
+  bool success = 2;
+  string userId = 3; // 成功的话返回用户id
+}
+
+//UserBeforeRequestReq 用户请求前的回调请求
+message UserBeforeRequestReq {
+  RequestHeader header = 1;
+  string path = 2; // 请求路径
+}
+
+//UserBeforeRequestResp 用户请求前的回调响应
+message UserBeforeRequestResp {
+  ResponseHeader header = 1;
+  string userId = 2; // 用户id
+}
+
+service callbackService {
+  rpc UserAfterOnline(UserAfterOnlineReq) returns (UserAfterOnlineResp) {}
+  rpc UserAfterOffline(UserAfterOfflineReq) returns (UserAfterOfflineResp) {}
+  rpc UserBeforeConnect(UserBeforeConnectReq) returns (UserBeforeConnectResp) {}
+  rpc UserBeforeRequest(UserBeforeRequestReq) returns (UserBeforeRequestResp) {}
+}

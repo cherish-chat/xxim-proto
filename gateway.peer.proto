@@ -1,0 +1,60 @@
+syntax = "proto3";
+package pb;
+option go_package = "./peerpb";
+
+import "types.peer.proto";
+
+// **************************************************** 外部 ***************************************************** //
+
+// **************************************************** 外部: 连接 ***************************************************** //
+
+//ListLongConnectionReq 获取长连接列表请求
+message ListLongConnectionReq {
+  RequestHeader header = 1;
+  message Filter {
+    optional string userIds = 1; // length > 0 时有效
+  }
+  optional Filter filter = 2;
+}
+
+//ListLongConnectionResp 获取长连接列表响应
+message ListLongConnectionResp {
+  ResponseHeader header = 1;
+  repeated LongConnection longConnections = 2;
+}
+
+// **************************************************** 内部 ***************************************************** //
+
+// 向用户推送数据
+
+//GatewayWriteDataType 写入数据类型
+enum GatewayWriteDataType {
+  //返回响应
+  Response = 0;
+  //主动推送message
+  PushMessage = 1;
+  //主动推送notice
+  PushNotice = 2;
+}
+
+//GatewayWriteDataContent 写入数据内容
+message GatewayWriteDataContent {
+  //写入数据类型
+  GatewayWriteDataType dataType = 1;
+  //响应
+  optional GatewayApiResponse response = 2;
+  //主动推送message
+  optional Message message = 3;
+  //主动推送notice
+  optional Notice notice = 4;
+}
+
+service connectionService {
+  //WriteData 向用户推送数据
+  rpc WriteData(GatewayWriteDataContent) returns (GatewayWriteDataContent) {}
+}
+
+service internalService {
+  //ListLongConnection 获取长连接列表
+  rpc ListLongConnection(ListLongConnectionReq) returns (ListLongConnectionResp) {}
+}
