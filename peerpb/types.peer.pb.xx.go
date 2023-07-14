@@ -5,10 +5,20 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
+type AuthErrorType string
+
+const (
+	AuthErrorTypeExpired AuthErrorType = "expired"
+	AuthErrorTypeInvalid AuthErrorType = "invalid"
+	AuthErrorTypeReplace AuthErrorType = "replace"
+)
+
 const (
 	ServerError         = "server_error"
 	ParamError          = "param_error"
+	AuthFailed          = "auth_failed"
 	PublicKeyError      = "public_key_error"
+	RsaDecryptError     = "rsa_decrypt_error"
 	RobotNotAllowCreate = "robot_not_allow_create"
 	//"robot_nickname_required"
 	RobotNicknameRequired = "robot_nickname_required"
@@ -80,6 +90,36 @@ const (
 	AvatarRequired = "avatar_required"
 	//captcha_required
 	CaptchaRequired = "captcha_required"
+
+	//friend_apply_already
+	FriendApplyAlready = "friend_apply_already"
+	//friend_apply_from_user_status_error
+	FriendApplyFromUserStatusError = "friend_apply_from_user_status_error"
+	//friend_apply_from_user_status_error
+	FriendApplyToUserStatusError = "friend_apply_to_user_status_error"
+	//friend_apply_to_user_destroy
+	FriendApplyToUserDestroy = "friend_apply_to_user_destroy"
+	//friend_apply_from_user_role_error
+	FriendApplyFromUserRoleError = "friend_apply_from_user_role_error"
+	//friend_apply_to_user_role_error
+	FriendApplyToUserRoleError = "friend_apply_to_user_role_error"
+	//friend_apply_answer_question_error
+	FriendApplyAnswerQuestionError = "friend_apply_answer_question_error"
+	//friend_apply_no_one
+	FriendApplyNoOne = "friend_apply_no_one"
+	//friend_apply_error
+	FriendApplyError = "friend_apply_error"
+	//friend_apply_are_friend
+	FriendApplyAreFriend = "friend_apply_are_friend"
+
+	//group_create_not_allow_role
+	GroupCreateNotAllowRole = "group_create_not_allow_role"
+	//group_create_joined_max_count
+	GroupCreateJoinedMaxCount = "group_create_joined_max_count"
+	//group_create_required_name
+	GroupCreateRequiredName = "group_create_required_name"
+	//group_create_required_avatar
+	GroupCreateRequiredAvatar = "group_create_required_avatar"
 )
 
 func marshalToString(v any) string {
@@ -129,5 +169,43 @@ func NewOkHeader() *ResponseHeader {
 		Code:       ResponseCode_SUCCESS,
 		ActionType: ResponseActionType_NONE_ACTION,
 		ActionData: "",
+	}
+}
+
+// AuthErrorExtra
+
+type AuthErrorExtra struct {
+	Type    AuthErrorType `json:"type"`
+	Message string        `json:"message"`
+}
+
+func NewAuthError(typ AuthErrorType, message string) *ResponseHeader {
+	extra := &AuthErrorExtra{
+		Type:    typ,
+		Message: message,
+	}
+	buf, _ := json.Marshal(extra)
+	return &ResponseHeader{
+		Code:  ResponseCode_UNAUTHORIZED,
+		Extra: string(buf),
+	}
+}
+
+func NewForbiddenError() *ResponseHeader {
+	return &ResponseHeader{
+		Code: ResponseCode_FORBIDDEN,
+	}
+}
+
+func NewToastHeader(level ToastActionData_Level, message string) *ResponseHeader {
+	data := &ToastActionData{
+		Level:   level,
+		Message: message,
+	}
+	return &ResponseHeader{
+		Code:       ResponseCode_INVALID_DATA,
+		ActionType: ResponseActionType_TOAST_ACTION,
+		ActionData: marshalToString(data),
+		Extra:      "",
 	}
 }

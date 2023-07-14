@@ -91,4 +91,7 @@ function peer_service() {
 }
 
 peer_api "gateway"
+peer_service "conversation"
+peer_service "message"
+peer_service "third"
 peer_service "user"

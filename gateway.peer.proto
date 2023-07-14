@@ -12,9 +12,10 @@ import "types.peer.proto";
 message ListLongConnectionReq {
   RequestHeader header = 1;
   message Filter {
-    optional string userIds = 1; // length > 0 时有效
+    repeated string userIds = 1; // length > 0 时有效
   }
   optional Filter filter = 2;
+  bool allPods = 3; // 是否获取所有pod的长连接
 }
 
 //ListLongConnectionResp 获取长连接列表响应
@@ -23,38 +24,94 @@ message ListLongConnectionResp {
   repeated LongConnection longConnections = 2;
 }
 
+// 踢掉连接
+
+message GatewayKickLongConnectionReq {
+  RequestHeader header = 1;
+  message Filter {
+    repeated string userIds = 1; // length > 0 时有效
+  }
+  optional Filter filter = 2;
+  bool allPods = 3; // 是否踢掉所有pod的长连接
+}
+
+message GatewayKickLongConnectionResp {
+  ResponseHeader header = 1;
+  repeated LongConnection successLongConnections = 2;
+}
+
+service connectionService {
+  //ListLongConnection 获取长连接列表
+  rpc ListLongConnection(ListLongConnectionReq) returns (ListLongConnectionResp) {}
+  //GatewayKickLongConnection 踢掉连接
+  rpc GatewayKickLongConnection(GatewayKickLongConnectionReq) returns (GatewayKickLongConnectionResp) {}
+}
+
+// **************************************************** 外部: 接口 ***************************************************** //
+
+//GatewayKeepAliveReq 保持连接请求
+message GatewayKeepAliveReq {
+  RequestHeader header = 1;
+}
+
+//GatewayKeepAliveResp 保持连接响应
+message GatewayKeepAliveResp {
+  ResponseHeader header = 1;
+}
+
+//VerifyConnectionReq 验证连接 客户端拿着自己的公钥，请求网关，网关返回自己的公钥
+message VerifyConnectionReq {
+  RequestHeader header = 1;
+  bytes publicKey = 2;
+}
+
+message VerifyConnectionResp {
+  ResponseHeader header = 1;
+  bytes publicKey = 2;
+}
+
+//AuthConnectionReq 验证连接用户id和token
+message AuthConnectionReq {
+  RequestHeader header = 1;
+  string userId = 2;
+  string token = 3;
+}
+
+message AuthConnectionResp {
+  ResponseHeader header = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+service interfaceService {
+  //GatewayKeepAlive 保持连接
+  rpc GatewayKeepAlive(GatewayKeepAliveReq) returns (GatewayKeepAliveResp) {}
+  //VerifyConnection 验证连接
+  rpc VerifyConnection(VerifyConnectionReq) returns (VerifyConnectionResp) {}
+  //AuthConnection 验证连接用户id和token
+  rpc AuthConnection(AuthConnectionReq) returns (AuthConnectionResp) {}
+}
+
 // **************************************************** 内部 ***************************************************** //
 
 // 向用户推送数据
 
-//GatewayWriteDataType 写入数据类型
-enum GatewayWriteDataType {
-  //返回响应
-  Response = 0;
-  //主动推送message
-  PushMessage = 1;
-  //主动推送notice
-  PushNotice = 2;
+message GatewayWriteDataReq {
+  RequestHeader header = 1;
+  message Filter {
+    repeated string userIds = 1; // length > 0 时有效
+  }
+  optional Filter filter = 2;
+  GatewayWriteDataContent content = 3;
+  bool allPods = 4; // 是否推送到所有pod
 }
 
-//GatewayWriteDataContent 写入数据内容
-message GatewayWriteDataContent {
-  //写入数据类型
-  GatewayWriteDataType dataType = 1;
-  //响应
-  optional GatewayApiResponse response = 2;
-  //主动推送message
-  optional Message message = 3;
-  //主动推送notice
-  optional Notice notice = 4;
-}
-
-service connectionService {
-  //WriteData 向用户推送数据
-  rpc WriteData(GatewayWriteDataContent) returns (GatewayWriteDataContent) {}
+message GatewayWriteDataResp {
+  ResponseHeader header = 1;
+  repeated LongConnection successLongConnections = 2;
 }
 
 service internalService {
-  //ListLongConnection 获取长连接列表
-  rpc ListLongConnection(ListLongConnectionReq) returns (ListLongConnectionResp) {}
+  //GatewayWriteData 向用户推送数据
+  rpc GatewayWriteData(GatewayWriteDataReq) returns (GatewayWriteDataResp) {}
 }

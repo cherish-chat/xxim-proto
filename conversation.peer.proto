@@ -1,0 +1,450 @@
+syntax = "proto3";
+package pb;
+option go_package = "./peerpb";
+
+import "types.peer.proto";
+
+// **************************************************** 定义枚举 ***************************************************** //
+//ConversationSettingKey 会话设置key
+enum ConversationSettingKey {
+  // 是否置顶
+  IsPinned = 0;
+  // 是否免打扰
+  IsMuted = 1;
+  // 是否屏蔽
+  IsBlocked = 2;
+  // 是否折叠
+  IsFolded = 3;
+  // 自己设置的会话备注
+  ConversationAlias = 4;
+  // 在会话中的昵称
+  NicknameInConversation = 5;
+}
+
+//FriendApplyStatus 好友申请状态
+enum FriendApplyStatus {
+  //FriendApplying 申请中
+  FriendApplying = 0;
+  //FriendAccepted 已同意
+  FriendAccepted = 1;
+  //FriendRejected 已拒绝
+  FriendRejected = 2;
+}
+
+
+// **************************************************** 外部 ***************************************************** //
+// ************************************************** 外部: 群 *************************************************** //
+message GroupAfterKeepAliveReq {
+  RequestHeader header = 1;
+}
+message GroupAfterKeepAliveResp {
+  ResponseHeader header = 1;
+}
+
+message GroupAfterOnlineReq{
+  RequestHeader header = 1;
+}
+message GroupAfterOnlineResp{
+  ResponseHeader header = 1;
+}
+
+message GroupAfterOfflineReq{
+  RequestHeader header = 1;
+  string userId = 2;
+}
+message GroupAfterOfflineResp{
+  ResponseHeader header = 1;
+}
+
+message GroupCreateReq {
+  RequestHeader header = 1;
+  optional string name = 2;
+  optional string avatar = 3;
+  repeated string memberList = 4;
+  map<string, string> infoMap = 5;
+  map<string, string> extraMap = 6;
+}
+message GroupCreateResp {
+  ResponseHeader header = 1;
+  string groupId = 2;
+}
+
+//CountJoinGroupReq 统计加入的群组数量
+message CountJoinGroupReq {
+  RequestHeader header = 1;
+}
+message CountJoinGroupResp {
+  ResponseHeader header = 1;
+  uint32 count = 2;
+}
+
+//CountCreateGroupReq 统计创建的群组数量
+message CountCreateGroupReq {
+  RequestHeader header = 1;
+}
+message CountCreateGroupResp {
+  ResponseHeader header = 1;
+  uint32 count = 2;
+}
+
+//ListGroupSubscribersReq 列出群组订阅者
+message ListGroupSubscribersReq{
+  RequestHeader header = 1;
+  //GroupId 群组id
+  string groupId = 2;
+  //Cursor 游标
+  uint32 cursor = 3;
+  //Limit 限制
+  uint32 limit = 4;
+  //Filter 过滤器
+  message Filter {
+    //subscribeTimeGte 订阅时间大于等于
+    uint32 subscribeTimeGte = 1;
+  }
+  //Option 选项
+  message Option {
+  }
+  Filter filter = 5;
+  Option option = 6;
+}
+message ListGroupSubscribersResp{
+  ResponseHeader header = 1;
+  //Cursor 游标
+  //List 列表
+  message Subscriber {
+    //UserId 用户id
+    string userId = 1;
+    //SubscribeTime 订阅时间
+    uint32 subscribeTime = 2;
+  }
+  repeated Subscriber subscriberList = 2;
+}
+
+message ListMyJoinedGroupReq {
+  RequestHeader header = 1;
+  //Cursor 游标
+  uint32 cursor = 2;
+  //Limit 限制
+  uint32 limit = 3;
+  //Filter 过滤器
+  message Filter {
+    //JoinTimeGte 加入时间大于等于
+    uint32 joinTimeGte = 1;
+  }
+  //Option 选项
+  message Option {
+  }
+  Filter filter = 4;
+  Option option = 5;
+}
+
+message ListMyJoinedGroupResp {
+  ResponseHeader header = 1;
+  //Cursor 游标
+  //List 列表
+  message Group {
+    //GroupId 群组id
+    string groupId = 1;
+  }
+  repeated Group groupList = 2;
+}
+
+service groupService {
+  rpc GroupAfterKeepAlive (GroupAfterKeepAliveReq) returns (GroupAfterKeepAliveResp) {}
+  rpc GroupAfterOnline (GroupAfterOnlineReq) returns (GroupAfterOnlineResp) {}
+  rpc GroupAfterOffline (GroupAfterOfflineReq) returns (GroupAfterOfflineResp) {}
+  rpc GroupCreate (GroupCreateReq) returns (GroupCreateResp) {}
+  rpc CountJoinGroup (CountJoinGroupReq) returns (CountJoinGroupResp) {}
+  rpc CountCreateGroup (CountCreateGroupReq) returns (CountCreateGroupResp) {}
+  rpc ListGroupSubscribers (ListGroupSubscribersReq) returns (ListGroupSubscribersResp) {}
+  rpc ListMyJoinedGroup (ListMyJoinedGroupReq) returns (ListMyJoinedGroupResp) {}
+}
+// ************************************************** 外部: 好友 *************************************************** //
+message FriendAfterKeepAliveReq {
+  RequestHeader header = 1;
+}
+message FriendAfterKeepAliveResp {
+  ResponseHeader header = 1;
+}
+
+message FriendAfterOnlineReq{
+  RequestHeader header = 1;
+}
+message FriendAfterOnlineResp{
+  ResponseHeader header = 1;
+}
+
+message FriendAfterOfflineReq{
+  RequestHeader header = 1;
+  string userId = 2;
+}
+message FriendAfterOfflineResp{
+  ResponseHeader header = 1;
+}
+
+//FriendApply 申请添加好友
+
+message FriendApplyReq {
+  RequestHeader header = 1;
+  string toUserId = 2;
+  //Message 附加消息
+  optional string message = 3;
+  //Answer 附加回答
+  optional string answer = 4;
+}
+message FriendApplyResp {
+  ResponseHeader header = 1;
+}
+
+//FriendApplyHandle 处理好友申请
+
+message FriendApplyHandleReq {
+  RequestHeader header = 1;
+  string applyId = 2;
+  //Agree 是否同意
+  bool agree = 3;
+  //同意后发送的第一条消息
+  optional string firstMessage = 4;
+}
+message FriendApplyHandleResp {
+  ResponseHeader header = 1;
+}
+
+//ListFriendApply 列出好友申请 给app用的
+
+message ListFriendApplyReq {
+  RequestHeader header = 1;
+  //Cursor 游标
+  uint32 cursor = 2;
+  //Limit 限制
+  uint32 limit = 3;
+  //Filter 过滤器
+  message Filter {
+    optional FriendApplyStatus status = 1;
+  }
+  //Option 选项
+  message Option {
+    bool includeApplyByMe = 1; //包含我发出的申请
+  }
+  Filter filter = 4;
+  Option option = 5;
+}
+message ListFriendApplyResp {
+  ResponseHeader header = 1;
+  //Cursor 游标
+  uint32 cursor = 2;
+  //List 列表
+  message FriendApply {
+    //ApplyId 申请id
+    string applyId = 1;
+    //FromUserId 申请人id
+    string fromUserId = 2;
+    //ToUserId 被申请人id
+    string toUserId = 3;
+    //Message 附加消息
+    string message = 4;
+    //Answer 附加回答
+    string answer = 5;
+  }
+  repeated FriendApply friendApplyList = 3;
+}
+
+//CountFriendReq 统计好友数量
+message CountFriendReq {
+  RequestHeader header = 1;
+}
+message CountFriendResp {
+  ResponseHeader header = 1;
+  uint32 count = 2;
+}
+
+service friendService {
+  rpc FriendAfterKeepAlive (FriendAfterKeepAliveReq) returns (FriendAfterKeepAliveResp) {}
+  rpc FriendAfterOnline (FriendAfterOnlineReq) returns (FriendAfterOnlineResp) {}
+  rpc FriendAfterOffline (FriendAfterOfflineReq) returns (FriendAfterOfflineResp) {}
+  rpc FriendApply (FriendApplyReq) returns (FriendApplyResp) {}
+  rpc FriendApplyHandle (FriendApplyHandleReq) returns (FriendApplyHandleResp) {}
+  rpc ListFriendApply (ListFriendApplyReq) returns (ListFriendApplyResp) {}
+  rpc CountFriend (CountFriendReq) returns (CountFriendResp) {}
+}
+// ************************************************** 外部: 频道 *************************************************** //
+message ChannelAfterKeepAliveReq {
+  RequestHeader header = 1;
+}
+message ChannelAfterKeepAliveResp {
+  ResponseHeader header = 1;
+}
+
+message ChannelAfterOnlineReq{
+  RequestHeader header = 1;
+}
+message ChannelAfterOnlineResp{
+  ResponseHeader header = 1;
+}
+
+message ChannelAfterOfflineReq{
+  RequestHeader header = 1;
+  string userId = 2;
+}
+message ChannelAfterOfflineResp{
+  ResponseHeader header = 1;
+}
+
+//UpsertUserSubscription 更新用户订阅的订阅号
+
+message UpsertChannelMemberReq {
+  RequestHeader header = 1;
+  //SubscriptionId 订阅号id
+  string channelId = 2;
+  UserChannel userChannel = 3;
+}
+message UpsertChannelMemberResp {
+  ResponseHeader header = 1;
+}
+
+//DeleteUserSubscription 删除用户订阅的订阅号
+
+message DeleteChannelMemberReq {
+  RequestHeader header = 1;
+  //channelId 频道id
+  string channelId = 2;
+}
+message DeleteChannelMemberResp {
+  ResponseHeader header = 1;
+}
+
+//ListChannelSubscribers 列出频道订阅者
+
+message ListChannelSubscribersReq {
+  RequestHeader header = 1;
+  //channelId 频道id
+  string channelId = 2;
+  //Cursor 游标
+  uint32 cursor = 3;
+  //Limit 限制
+  uint32 limit = 4;
+  //Filter 过滤器
+  message Filter {
+    //subscribeTimeGte 订阅时间大于等于
+    uint32 subscribeTimeGte = 1;
+  }
+  //Option 选项
+  message Option {
+  }
+  Filter filter = 5;
+  Option option = 6;
+}
+
+message ListChannelSubscribersResp{
+  ResponseHeader header = 1;
+  //Cursor 游标
+  //List 列表
+  message Subscriber {
+    //UserId 用户id
+    string userId = 1;
+    //SubscribeTime 订阅时间
+    uint32 subscribeTime = 2;
+  }
+  repeated Subscriber subscriberList = 2;
+}
+
+//ListMyChannels 列出我的订阅的频道
+
+message ListMyChannelsReq {
+  RequestHeader header = 1;
+  //Cursor 游标
+  uint32 cursor = 2;
+  //Limit 限制
+  uint32 limit = 3;
+  //Filter 过滤器
+  message Filter {
+    //joinTimeGte 加入时间大于等于
+    uint32 joinTimeGte = 1;
+  }
+  //Option 选项
+  message Option {
+  }
+  Filter filter = 4;
+  Option option = 5;
+}
+
+message ListMyChannelsResp {
+  ResponseHeader header = 1;
+  //Cursor 游标
+  uint32 cursor = 2;
+  //List 列表
+  message MyChannel {
+    //ChannelId 频道id
+    string channelId = 1;
+    //JoinTime 加入时间
+    uint32 joinTime = 2;
+  }
+  repeated MyChannel myChannelList = 3;
+}
+
+service channelService {
+  rpc ChannelAfterKeepAlive (ChannelAfterKeepAliveReq) returns (ChannelAfterKeepAliveResp) {}
+  rpc ChannelAfterOnline (ChannelAfterOnlineReq) returns (ChannelAfterOnlineResp) {}
+  rpc ChannelAfterOffline (ChannelAfterOfflineReq) returns (ChannelAfterOfflineResp) {}
+  rpc UpsertChannelMember (UpsertChannelMemberReq) returns (UpsertChannelMemberResp) {}
+  rpc DeleteChannelMember (DeleteChannelMemberReq) returns (DeleteChannelMemberResp) {}
+  rpc ListChannelSubscribers (ListChannelSubscribersReq) returns (ListChannelSubscribersResp) {}
+  rpc ListMyChannels (ListMyChannelsReq) returns (ListMyChannelsResp) {}
+}
+
+// ************************************************** 外部: 会话 *************************************************** //
+
+//ListJoinedConversations 列出加入的会话
+message ListJoinedConversationsReq {
+  RequestHeader header = 1;
+  ConversationType conversationType = 2;
+
+  //Cursor 游标
+  uint32 cursor = 3;
+  //Limit 限制
+  uint32 limit = 4;
+  //Filter 过滤器
+  message Filter {
+    message SettingKV {
+      enum Operator {
+        // 等于
+        Equal = 0;
+        // 不等于
+        NotEqual = 1;
+      }
+      ConversationSettingKey key = 1;
+      string value = 2;
+      Operator operator = 3;
+      bool orNotExists = 4;
+      bool orExists = 5;
+    }
+    //使用setting中的字段过滤
+    repeated SettingKV settingList = 1;
+  }
+  //Option 选项
+  message Option {
+    //IncludeSelfMemberInfo 是否包含自己的成员信息
+    bool includeSelfMemberInfo = 2;
+  }
+  Filter filter = 5;
+  Option option = 6;
+}
+
+message ListJoinedConversationsResp {
+  ResponseHeader header = 1;
+  //List 列表
+  message Conversation {
+    //ConversationId 会话id
+    string conversationId = 1;
+    ConversationType conversationType = 2;
+    message SelfMemberInfo {
+      uint32 joinTime = 1;
+    }
+    optional SelfMemberInfo selfMemberInfo = 31;
+  }
+  repeated Conversation conversationList = 3;
+}
+
+service sessionService {
+  rpc ListJoinedConversations (ListJoinedConversationsReq) returns (ListJoinedConversationsResp) {}
+}

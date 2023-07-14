@@ -101,6 +101,28 @@ message GatewayApiResponse {
   bytes body = 6;
 }
 
+//GatewayWriteDataType 写入数据类型
+enum GatewayWriteDataType {
+  //返回响应
+  Response = 0;
+  //主动推送message
+  PushMessage = 1;
+  //主动推送notice
+  PushNotice = 2;
+}
+
+//GatewayWriteDataContent 写入数据内容
+message GatewayWriteDataContent {
+  //写入数据类型
+  GatewayWriteDataType dataType = 1;
+  //响应
+  optional GatewayApiResponse response = 2;
+  //主动推送message
+  optional Message message = 3;
+  //主动推送notice
+  optional Message notice = 4;
+}
+
 // **************************************************** 网关:连接 *****************************************************  //
 
 //LongConnection 长连接
@@ -126,55 +148,46 @@ enum ConversationType {
 
 // **************************************************** 通知 *****************************************************  //
 
-//NoticeContentType 通知内容类型
-enum NoticeContentType {
-  // 有新的好友请求
-  NewFriendRequest = 0;
-  // 加入到了新群
-  JoinNewGroup = 1;
-  // 在线状态
-  OnlineStatus = 2;
-}
-
-//Notice 通知
-message Notice {
-  //通知id 因为通知永远都是服务端发送给客户端的，所以通知id一定唯一。
-  string noticeId = 1;
-  //发送到哪个会话
-  string conversationId = 2; // 单聊: 那么该值为发送者和接受者的id；群聊：那么该值为群id；订阅号：那么该值为订阅号id
-  //会话类型
-  ConversationType conversationType = 3;
-  //通知内容
-  string content = 4;
-  //通知类型
-  NoticeContentType contentType = 5;
-  //通知的更新时间
-  uint32 updateTime = 6;
-  //排序
-  uint32 sort = 7;
-}
-
 // **************************************************** 消息 *****************************************************  //
-
+enum SenderType {
+  //用户
+  UserSender = 0;
+  GroupSender = 1;
+  ChannelSender = 2;
+}
 //MessageContentType 消息内容类型
 enum MessageContentType {
+  // 未知
+  UnknownMessageContentType = 0;
+  // 1-100 是一般消息类型
   // 图文
-  Text = 0;
+  Text = 1;
   // Markdown
-  Markdown = 1;
+  Markdown = 2;
   // 图片
-  Image = 2;
+  Image = 3;
   // 语音
-  Voice = 3;
+  Voice = 4;
   // 视频
-  Video = 4;
+  Video = 5;
 
+  // 100是自定义消息类型
+  Custom = 100;
+
+  // 101-200 是特殊消息类型
   // 正在输入
   Typing = 101;
   // 已读
   Read = 102;
   // 撤回
   Recall = 103;
+
+  // 201-300 是通知类型
+  NewFriendRequest = 201;
+  // 加入到了新群
+  JoinNewGroup = 202;
+  // 在线状态
+  OnlineStatus = 203;
 }
 
 //Message 消息
@@ -192,10 +205,12 @@ message Message {
   message Sender {
     //发送者id
     string id = 1;
+    //发送者类型
+    SenderType senderType = 2;
     //发送者名称
-    string name = 2;
+    string name = 3;
     //发送者头像
-    string avatar = 3;
+    string avatar = 4;
     //extra
     string extra = 11;
   }
@@ -227,4 +242,15 @@ message Message {
   Option option = 16;
   //extraMap, example: {"platformSource": "windows"}
   map<string, string> extraMap = 17;
+}
+
+// **************************************************** 会话 *****************************************************  //
+
+// **************************************************** 会话:频道 *****************************************************  //
+//UserChannel 用户订阅的频道
+message UserChannel {
+  string channelId = 1;
+  string userId = 2;
+  uint32 subscribeTime = 3;
+  map<string, string> extraMap = 6;
 }

@@ -22,8 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConnectionServiceClient interface {
-	//WriteData 向用户推送数据
-	WriteData(ctx context.Context, in *GatewayWriteDataContent, opts ...grpc.CallOption) (*GatewayWriteDataContent, error)
+	//ListLongConnection 获取长连接列表
+	ListLongConnection(ctx context.Context, in *ListLongConnectionReq, opts ...grpc.CallOption) (*ListLongConnectionResp, error)
+	//GatewayKickLongConnection 踢掉连接
+	GatewayKickLongConnection(ctx context.Context, in *GatewayKickLongConnectionReq, opts ...grpc.CallOption) (*GatewayKickLongConnectionResp, error)
 }
 
 type connectionServiceClient struct {
@@ -34,9 +36,18 @@ func NewConnectionServiceClient(cc grpc.ClientConnInterface) ConnectionServiceCl
 	return &connectionServiceClient{cc}
 }
 
-func (c *connectionServiceClient) WriteData(ctx context.Context, in *GatewayWriteDataContent, opts ...grpc.CallOption) (*GatewayWriteDataContent, error) {
-	out := new(GatewayWriteDataContent)
-	err := c.cc.Invoke(ctx, "/pb.connectionService/WriteData", in, out, opts...)
+func (c *connectionServiceClient) ListLongConnection(ctx context.Context, in *ListLongConnectionReq, opts ...grpc.CallOption) (*ListLongConnectionResp, error) {
+	out := new(ListLongConnectionResp)
+	err := c.cc.Invoke(ctx, "/pb.connectionService/ListLongConnection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *connectionServiceClient) GatewayKickLongConnection(ctx context.Context, in *GatewayKickLongConnectionReq, opts ...grpc.CallOption) (*GatewayKickLongConnectionResp, error) {
+	out := new(GatewayKickLongConnectionResp)
+	err := c.cc.Invoke(ctx, "/pb.connectionService/GatewayKickLongConnection", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +58,10 @@ func (c *connectionServiceClient) WriteData(ctx context.Context, in *GatewayWrit
 // All implementations must embed UnimplementedConnectionServiceServer
 // for forward compatibility
 type ConnectionServiceServer interface {
-	//WriteData 向用户推送数据
-	WriteData(context.Context, *GatewayWriteDataContent) (*GatewayWriteDataContent, error)
+	//ListLongConnection 获取长连接列表
+	ListLongConnection(context.Context, *ListLongConnectionReq) (*ListLongConnectionResp, error)
+	//GatewayKickLongConnection 踢掉连接
+	GatewayKickLongConnection(context.Context, *GatewayKickLongConnectionReq) (*GatewayKickLongConnectionResp, error)
 	mustEmbedUnimplementedConnectionServiceServer()
 }
 
@@ -56,8 +69,11 @@ type ConnectionServiceServer interface {
 type UnimplementedConnectionServiceServer struct {
 }
 
-func (UnimplementedConnectionServiceServer) WriteData(context.Context, *GatewayWriteDataContent) (*GatewayWriteDataContent, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WriteData not implemented")
+func (UnimplementedConnectionServiceServer) ListLongConnection(context.Context, *ListLongConnectionReq) (*ListLongConnectionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListLongConnection not implemented")
+}
+func (UnimplementedConnectionServiceServer) GatewayKickLongConnection(context.Context, *GatewayKickLongConnectionReq) (*GatewayKickLongConnectionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GatewayKickLongConnection not implemented")
 }
 func (UnimplementedConnectionServiceServer) mustEmbedUnimplementedConnectionServiceServer() {}
 
@@ -72,20 +88,38 @@ func RegisterConnectionServiceServer(s grpc.ServiceRegistrar, srv ConnectionServ
 	s.RegisterService(&ConnectionService_ServiceDesc, srv)
 }
 
-func _ConnectionService_WriteData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GatewayWriteDataContent)
+func _ConnectionService_ListLongConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListLongConnectionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConnectionServiceServer).WriteData(ctx, in)
+		return srv.(ConnectionServiceServer).ListLongConnection(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.connectionService/WriteData",
+		FullMethod: "/pb.connectionService/ListLongConnection",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConnectionServiceServer).WriteData(ctx, req.(*GatewayWriteDataContent))
+		return srv.(ConnectionServiceServer).ListLongConnection(ctx, req.(*ListLongConnectionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConnectionService_GatewayKickLongConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GatewayKickLongConnectionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConnectionServiceServer).GatewayKickLongConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.connectionService/GatewayKickLongConnection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConnectionServiceServer).GatewayKickLongConnection(ctx, req.(*GatewayKickLongConnectionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -98,8 +132,176 @@ var ConnectionService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*ConnectionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "WriteData",
-			Handler:    _ConnectionService_WriteData_Handler,
+			MethodName: "ListLongConnection",
+			Handler:    _ConnectionService_ListLongConnection_Handler,
+		},
+		{
+			MethodName: "GatewayKickLongConnection",
+			Handler:    _ConnectionService_GatewayKickLongConnection_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "gateway.peer.proto",
+}
+
+// InterfaceServiceClient is the client API for InterfaceService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type InterfaceServiceClient interface {
+	//GatewayKeepAlive 保持连接
+	GatewayKeepAlive(ctx context.Context, in *GatewayKeepAliveReq, opts ...grpc.CallOption) (*GatewayKeepAliveResp, error)
+	//VerifyConnection 验证连接
+	VerifyConnection(ctx context.Context, in *VerifyConnectionReq, opts ...grpc.CallOption) (*VerifyConnectionResp, error)
+	//AuthConnection 验证连接用户id和token
+	AuthConnection(ctx context.Context, in *AuthConnectionReq, opts ...grpc.CallOption) (*AuthConnectionResp, error)
+}
+
+type interfaceServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewInterfaceServiceClient(cc grpc.ClientConnInterface) InterfaceServiceClient {
+	return &interfaceServiceClient{cc}
+}
+
+func (c *interfaceServiceClient) GatewayKeepAlive(ctx context.Context, in *GatewayKeepAliveReq, opts ...grpc.CallOption) (*GatewayKeepAliveResp, error) {
+	out := new(GatewayKeepAliveResp)
+	err := c.cc.Invoke(ctx, "/pb.interfaceService/GatewayKeepAlive", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interfaceServiceClient) VerifyConnection(ctx context.Context, in *VerifyConnectionReq, opts ...grpc.CallOption) (*VerifyConnectionResp, error) {
+	out := new(VerifyConnectionResp)
+	err := c.cc.Invoke(ctx, "/pb.interfaceService/VerifyConnection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interfaceServiceClient) AuthConnection(ctx context.Context, in *AuthConnectionReq, opts ...grpc.CallOption) (*AuthConnectionResp, error) {
+	out := new(AuthConnectionResp)
+	err := c.cc.Invoke(ctx, "/pb.interfaceService/AuthConnection", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// InterfaceServiceServer is the server API for InterfaceService service.
+// All implementations must embed UnimplementedInterfaceServiceServer
+// for forward compatibility
+type InterfaceServiceServer interface {
+	//GatewayKeepAlive 保持连接
+	GatewayKeepAlive(context.Context, *GatewayKeepAliveReq) (*GatewayKeepAliveResp, error)
+	//VerifyConnection 验证连接
+	VerifyConnection(context.Context, *VerifyConnectionReq) (*VerifyConnectionResp, error)
+	//AuthConnection 验证连接用户id和token
+	AuthConnection(context.Context, *AuthConnectionReq) (*AuthConnectionResp, error)
+	mustEmbedUnimplementedInterfaceServiceServer()
+}
+
+// UnimplementedInterfaceServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedInterfaceServiceServer struct {
+}
+
+func (UnimplementedInterfaceServiceServer) GatewayKeepAlive(context.Context, *GatewayKeepAliveReq) (*GatewayKeepAliveResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GatewayKeepAlive not implemented")
+}
+func (UnimplementedInterfaceServiceServer) VerifyConnection(context.Context, *VerifyConnectionReq) (*VerifyConnectionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyConnection not implemented")
+}
+func (UnimplementedInterfaceServiceServer) AuthConnection(context.Context, *AuthConnectionReq) (*AuthConnectionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthConnection not implemented")
+}
+func (UnimplementedInterfaceServiceServer) mustEmbedUnimplementedInterfaceServiceServer() {}
+
+// UnsafeInterfaceServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to InterfaceServiceServer will
+// result in compilation errors.
+type UnsafeInterfaceServiceServer interface {
+	mustEmbedUnimplementedInterfaceServiceServer()
+}
+
+func RegisterInterfaceServiceServer(s grpc.ServiceRegistrar, srv InterfaceServiceServer) {
+	s.RegisterService(&InterfaceService_ServiceDesc, srv)
+}
+
+func _InterfaceService_GatewayKeepAlive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GatewayKeepAliveReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InterfaceServiceServer).GatewayKeepAlive(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.interfaceService/GatewayKeepAlive",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InterfaceServiceServer).GatewayKeepAlive(ctx, req.(*GatewayKeepAliveReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InterfaceService_VerifyConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyConnectionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InterfaceServiceServer).VerifyConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.interfaceService/VerifyConnection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InterfaceServiceServer).VerifyConnection(ctx, req.(*VerifyConnectionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InterfaceService_AuthConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthConnectionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InterfaceServiceServer).AuthConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.interfaceService/AuthConnection",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InterfaceServiceServer).AuthConnection(ctx, req.(*AuthConnectionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// InterfaceService_ServiceDesc is the grpc.ServiceDesc for InterfaceService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var InterfaceService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.interfaceService",
+	HandlerType: (*InterfaceServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GatewayKeepAlive",
+			Handler:    _InterfaceService_GatewayKeepAlive_Handler,
+		},
+		{
+			MethodName: "VerifyConnection",
+			Handler:    _InterfaceService_VerifyConnection_Handler,
+		},
+		{
+			MethodName: "AuthConnection",
+			Handler:    _InterfaceService_AuthConnection_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -110,8 +312,8 @@ var ConnectionService_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InternalServiceClient interface {
-	//ListLongConnection 获取长连接列表
-	ListLongConnection(ctx context.Context, in *ListLongConnectionReq, opts ...grpc.CallOption) (*ListLongConnectionResp, error)
+	//GatewayWriteData 向用户推送数据
+	GatewayWriteData(ctx context.Context, in *GatewayWriteDataReq, opts ...grpc.CallOption) (*GatewayWriteDataResp, error)
 }
 
 type internalServiceClient struct {
@@ -122,9 +324,9 @@ func NewInternalServiceClient(cc grpc.ClientConnInterface) InternalServiceClient
 	return &internalServiceClient{cc}
 }
 
-func (c *internalServiceClient) ListLongConnection(ctx context.Context, in *ListLongConnectionReq, opts ...grpc.CallOption) (*ListLongConnectionResp, error) {
-	out := new(ListLongConnectionResp)
-	err := c.cc.Invoke(ctx, "/pb.internalService/ListLongConnection", in, out, opts...)
+func (c *internalServiceClient) GatewayWriteData(ctx context.Context, in *GatewayWriteDataReq, opts ...grpc.CallOption) (*GatewayWriteDataResp, error) {
+	out := new(GatewayWriteDataResp)
+	err := c.cc.Invoke(ctx, "/pb.internalService/GatewayWriteData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +337,8 @@ func (c *internalServiceClient) ListLongConnection(ctx context.Context, in *List
 // All implementations must embed UnimplementedInternalServiceServer
 // for forward compatibility
 type InternalServiceServer interface {
-	//ListLongConnection 获取长连接列表
-	ListLongConnection(context.Context, *ListLongConnectionReq) (*ListLongConnectionResp, error)
+	//GatewayWriteData 向用户推送数据
+	GatewayWriteData(context.Context, *GatewayWriteDataReq) (*GatewayWriteDataResp, error)
 	mustEmbedUnimplementedInternalServiceServer()
 }
 
@@ -144,8 +346,8 @@ type InternalServiceServer interface {
 type UnimplementedInternalServiceServer struct {
 }
 
-func (UnimplementedInternalServiceServer) ListLongConnection(context.Context, *ListLongConnectionReq) (*ListLongConnectionResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListLongConnection not implemented")
+func (UnimplementedInternalServiceServer) GatewayWriteData(context.Context, *GatewayWriteDataReq) (*GatewayWriteDataResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GatewayWriteData not implemented")
 }
 func (UnimplementedInternalServiceServer) mustEmbedUnimplementedInternalServiceServer() {}
 
@@ -160,20 +362,20 @@ func RegisterInternalServiceServer(s grpc.ServiceRegistrar, srv InternalServiceS
 	s.RegisterService(&InternalService_ServiceDesc, srv)
 }
 
-func _InternalService_ListLongConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListLongConnectionReq)
+func _InternalService_GatewayWriteData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GatewayWriteDataReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InternalServiceServer).ListLongConnection(ctx, in)
+		return srv.(InternalServiceServer).GatewayWriteData(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.internalService/ListLongConnection",
+		FullMethod: "/pb.internalService/GatewayWriteData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InternalServiceServer).ListLongConnection(ctx, req.(*ListLongConnectionReq))
+		return srv.(InternalServiceServer).GatewayWriteData(ctx, req.(*GatewayWriteDataReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -186,8 +388,8 @@ var InternalService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InternalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListLongConnection",
-			Handler:    _InternalService_ListLongConnection_Handler,
+			MethodName: "GatewayWriteData",
+			Handler:    _InternalService_GatewayWriteData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

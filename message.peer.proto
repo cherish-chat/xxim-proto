@@ -1,0 +1,172 @@
+syntax = "proto3";
+package pb;
+option go_package = "./peerpb";
+
+import "types.peer.proto";
+
+// **************************************************** 定义枚举 ***************************************************** //
+
+// **************************************************** 定义消息体：消息 ***************************************************** //
+//MessageContentText 图文消息
+message MessageContentText {
+  message Item {
+    enum Type {
+      //文本
+      TEXT = 0;
+      //图片
+      IMAGE = 1;
+      //@
+      AT = 2;
+    }
+    //图片
+    message Image {
+      //图片地址
+      string url = 1;
+      //宽度
+      int32 width = 2;
+      //高度
+      int32 height = 3;
+    }
+    //@用户信息
+    message At {
+      //用户id
+      string userId = 1;
+      //用户名称, 渲染时先获取用户本地信息中的备注，如果没有备注，那么就显示该名称
+      string name = 2;
+    }
+    //类型
+    Type type = 1;
+    //文本
+    string text = 2;
+    optional Image image = 3;
+    optional At at = 4;
+  }
+  //items 图文消息
+  repeated Item items = 1;
+}
+
+// **************************************************** 定义消息体：通知 ***************************************************** //
+//NoticeContentNewFriendRequest 通知内容-新的好友请求
+message NoticeContentNewFriendRequest {}
+//NoticeContentJoinNewGroup 通知内容-加入新群
+message NoticeContentJoinNewGroup {
+  string groupId = 1;
+}
+//NoticeContentOnlineStatus 通知内容-用户在线状态
+message NoticeContentOnlineStatus {
+  string userId = 1; // 用户id
+  bool online = 2; // 是在线还是离线
+}
+
+// **************************************************** 外部 ***************************************************** //
+// ************************************************** 外部: 消息 *************************************************** //
+//MessageSendReq 发送消息请求
+message MessageSendReq {
+  RequestHeader header = 1;
+  //消息
+  Message message = 2;
+  //禁止走队列
+  bool disableQueue = 3;
+}
+
+//MessageSendResp 发送消息响应
+message MessageSendResp {
+  ResponseHeader header = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+//MessageInsertReq 插入消息请求
+message MessageInsertReq {
+  RequestHeader header = 1;
+  //消息
+  repeated Message messages = 2;
+}
+
+//MessageInsertResp 插入消息响应
+message MessageInsertResp {
+  ResponseHeader header = 1;
+}
+
+//MessagePushReq 推送消息请求
+message MessagePushReq {
+  RequestHeader header = 1;
+  //消息
+  repeated Message message = 2;
+}
+
+//MessagePushResp 推送消息响应
+message MessagePushResp {
+  ResponseHeader header = 1;
+}
+
+//GetConvMessageSeqReq 获取会话消息序列号请求
+message GetConvMessageSeqReq {
+  RequestHeader header = 1;
+  //会话id
+  string convId = 2;
+  //会话类型
+  ConversationType convType = 3;
+}
+
+//GetConvMessageSeqResp 获取会话消息序列号响应
+message GetConvMessageSeqResp {
+  ResponseHeader header = 1;
+  //会话id
+  string convId = 2;
+  ConversationType convType = 3;
+  uint32 minSeq = 4;
+  uint32 maxSeq = 5;
+}
+
+//SyncMessageReq 同步消息请求
+message SyncMessageReq {
+  RequestHeader header = 1;
+  //会话id
+  string convId = 2;
+  //会话类型
+  ConversationType convType = 3;
+  //seqList
+  repeated uint32 seqList = 4;
+}
+
+//SyncMessageResp 同步消息响应
+message SyncMessageResp {
+  ResponseHeader header = 1;
+  //会话id
+  string convId = 2;
+  ConversationType convType = 3;
+  //消息
+  repeated Message messages = 4;
+}
+
+service messageService {
+  //MessageInsert 插入消息
+  //二次开发时，需要实现该接口
+  rpc MessageInsert(MessageInsertReq) returns (MessageInsertResp);
+  //MessageSend 发送消息
+  rpc MessageSend(MessageSendReq) returns (MessageSendResp);
+  //MessagePush 推送消息
+  rpc MessagePush(MessagePushReq) returns (MessagePushResp);
+  //GetConvMessageSeq 获取会话消息序列号
+  rpc GetConvMessageSeq(GetConvMessageSeqReq) returns (GetConvMessageSeqResp);
+  //SyncMessage 同步消息
+  rpc SyncMessage(SyncMessageReq) returns (SyncMessageResp);
+}
+// ************************************************** 外部: 通知 *************************************************** //
+//NoticeSend 通知发送
+
+message NoticeSendReq {
+  RequestHeader header = 1;
+  repeated Message notices = 2;
+}
+
+message NoticeSendResp {
+  ResponseHeader header = 1;
+}
+
+
+service noticeService {
+  //NoticeSend 通知发送
+  rpc NoticeSend(NoticeSendReq) returns (NoticeSendResp);
+}
